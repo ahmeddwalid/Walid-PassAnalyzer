@@ -1,0 +1,35 @@
+{
+  "name": "walid-passanalyzer",
+  "homepage": "https://ahmeddwalid.github.io/Walid-PassAnalyzer/",
+  "description": "A password strength analyzer built with React and Vite",
+  "author": "Ahmed Walid",
+  "license": "Apache-2.0",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
+    "format": "prettier --write .",
+    "lint": "eslint . --ext .ts,.tsx",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
+    "test:coverage:report": "vitest run --coverage && open coverage/lcov-report/index.html",
+    "test:coverage:check": "vitest run --coverage && npx nyc report --reporter=text-lcov | npx coveralls"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zxcvbn": "^4.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "gh-pages": "^6.1.1",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0"
+  }
+}
