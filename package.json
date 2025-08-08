@@ -5,7 +5,7 @@
   "author": "Ahmed Walid",
   "license": "Apache-2.0",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -22,14 +22,21 @@
     "test:coverage:check": "vitest run --coverage && npx nyc report --reporter=text-lcov | npx coveralls"
   },
   "dependencies": {
+    "jspdf": "^3.0.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.4",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.14.0",
+    "@vitest/ui": "^3.2.4",
     "gh-pages": "^6.1.1",
+    "jsdom": "^26.1.0",
     "typescript": "~5.7.2",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "vitest": "^3.2.4"
   }
 }

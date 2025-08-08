@@ -32,23 +32,23 @@ Walid PassAnalyzer is a comprehensive password security assessment tool designed
 
 ### **Privacy First**
 
-- **100% Client-Side Analysis** - No data ever leaves your browser
-- **No Storage** - Passwords are never saved or transmitted
-- **Open Source** - Full transparency in code and security practices
+- **100% Client-Side Analysis**: No data ever leaves your browser
+- **No Storage**: Passwords are never saved or transmitted
+- **Open Source**: Full transparency in code and security practices
 
 ### **Comprehensive Analysis**
 
-- **Real-time Strength Assessment** - Instant feedback as you type
-- **Multiple Attack Scenarios** - Estimates for online/offline attacks with different computational resources
-- **Smart Suggestions** - Actionable tips to improve password security
-- **Visual Strength Meter** - Color-coded progress bar with percentage indicators
+- **Real-time Strength Assessment**: Instant feedback as you type
+- **Multiple Attack Scenarios**: Estimates for online/offline attacks with different computational resources
+- **Smart Suggestions**: Actionable tips to improve password security
+- **Visual Strength Meter**: Color coded progress bar with percentage indicators
 
 ### **Modern User Experience**
 
-- **Responsive Design** - Works seamlessly on desktop, tablet, and mobile
-- **Dark Theme** - Easy on the eyes with a sleek, professional interface
-- **Accessibility** - ARIA labels, keyboard navigation, and screen reader support
-- **Smooth Animations** - Polished transitions and micro-interactions
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
+- **Dark Theme**: Easy on the eyes with a sleek, professional interface
+- **Accessibility**: ARIA labels, keyboard navigation, and screen reader support
+- **Smooth Animations**: Polished transitions and micro-interactions
 
 ## Prerequisites
 
