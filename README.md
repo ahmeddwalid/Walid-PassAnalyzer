@@ -4,9 +4,29 @@ A local-first password instrument. It measures guessability, explains the patter
 
 The application is a static React/TypeScript site. There is no backend, account system, analytics script, or runtime CDN. All analysis and generation happen in the browser.
 
-**Design direction:** Signal & Ink. A warm paper canvas, deep petrol surfaces, a vermilion signal accent, editorial typography, and measurement-oriented data displays. The visual system is original to this project and is implemented with semantic CSS tokens rather than a component framework.
+**Live deployment:** [`https://passanalyzer.ahmeddwalid.me/`](https://passanalyzer.ahmeddwalid.me/)
+
+**Design direction:** Cobalt & Mineral Slate. A calm, dark-first desktop-utility aesthetic built around mineral slate surfaces, cobalt blue primary actions, semantic risk accents, `Onest Variable` typography, and `IBM Plex Mono` for timings and cryptographic readouts. The visual system is original to this project and implemented with semantic CSS tokens in light and dark themes rather than a component framework.
 
 ![Walid PassAnalyzer interface](docs/images/InterfaceScreenshot.png)
+
+## Screenshots
+
+- **Detailed breakdown & crack time estimates**
+
+  ![Detailed password analysis view](docs/images/DetailedAnalysisScreenshot.png)
+
+- **Cryptographic password generator**
+
+  ![Cryptographic password generator view](docs/images/GeneratorScreenshot.png)
+
+- **Light theme (`Good` assessment)**
+
+  ![Walid PassAnalyzer light theme](docs/images/LightThemeScreenshot.png)
+
+- **Mobile layout (`390px` viewport)**
+
+  <img src="docs/images/MobileScreenshot.png" alt="Walid PassAnalyzer mobile view" width="360" />
 
 ## What it does
 
@@ -129,7 +149,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:5173/Walid-PassAnalyzer/`. The base path is configured in `vite.config.ts` and can be overridden with `VITE_BASE_PATH` if you are serving the app from a different path.
+Open `http://localhost:5173/`. The base path defaults to `/` in `vite.config.ts` for `https://passanalyzer.ahmeddwalid.me/` and can be overridden with `VITE_BASE_PATH` if you serve the app from a subdirectory.
 
 ### Scripts
 
@@ -158,13 +178,11 @@ The Playwright config starts the Vite server automatically and covers desktop an
 
 The production build uses:
 
-- Base path `/Walid-PassAnalyzer/`.
+- Custom domain [`https://passanalyzer.ahmeddwalid.me/`](https://passanalyzer.ahmeddwalid.me/) via `public/CNAME` and root `/` base path.
 - `public/.nojekyll` so GitHub Pages does not apply Jekyll processing.
 - A hash router, so no SPA fallback rewrite is required.
 - A static `404.html` for unknown non-hash paths.
-- `.github/workflows/deploy.yml`, which runs typecheck, lint, unit tests, and the production build, then publishes `dist/` through the official GitHub Pages actions.
-
-The workflow is configured but has not been run from this workspace. A production deployment requires a push to `main` or a manual workflow dispatch by the repository owner. The local `deploy` script exists for a manual `gh-pages` publish, but the Actions workflow is the recommended path.
+- `.github/workflows/deploy.yml`, which runs typecheck, lint, unit tests, and the production build, then publishes `dist/` through the official GitHub Pages actions on pushes to `main`.
 
 ## Verification performed
 
@@ -176,7 +194,7 @@ These are the commands that were actually executed during the redesign:
 - `npm run build` (passes; `scripts/verify-build.mjs` checks the CSP hash of the inline theme initializer and the hashed module entry)
 - `npx playwright test` (27 tests pass across desktop and mobile Chromium; one desktop skip for the mobile-only navigation case)
 - axe WCAG 2.2 scans in both light and dark themes (no violations on the six primary routes)
-- Production preview at `/Walid-PassAnalyzer/` with CSP, self-hosted fonts, real HIBP request, and PDF/text export checked
+- Production preview at `/` (`https://passanalyzer.ahmeddwalid.me/`) with CSP, self-hosted fonts, real HIBP request, and PDF/text export checked
 - Real Pwned Passwords range request: only the five-character prefix was observed
 - `npm audit --omit=dev`: zero known vulnerabilities
 
@@ -199,7 +217,7 @@ Walid PassAnalyzer is distributed under the [Apache License 2.0](LICENSE.txt).
 
 - [zxcvbn](https://github.com/dropbox/zxcvbn) is MIT-licensed.
 - The EFF Large and EFF Short wordlists are attributed to the Electronic Frontier Foundation under CC BY 3.0 US. Source links and license text are in `public/wordlists/` and in the in-app dictionary page.
-- Instrument Sans, Newsreader, and IBM Plex Mono are licensed under the SIL Open Font License. License files are in `public/fonts/`.
+- Onest Variable and IBM Plex Mono are licensed under the SIL Open Font License. License files are in `public/fonts/`.
 - Icons are drawn for this project as inline SVG paths and use the Heroicons visual conventions where applicable; no icon package is bundled.
 
 Built by Ahmed Walid.
