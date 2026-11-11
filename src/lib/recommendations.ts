@@ -67,7 +67,11 @@ export function buildRecommendations(analysis: AnalysisResult): Recommendation[]
   const fastOffline = analysis.attacks.find(
     (attack) => attack.key === 'offline_fast_hashing_1e10_per_second',
   );
-  const fastOfflineVulnerable =
+  const fastOfflineUnderDay =
+    fastOffline !== undefined &&
+    Number.isFinite(fastOffline.seconds) &&
+    fastOffline.seconds < 24 * 60 * 60;
+  const fastOfflineUnderYear =
     fastOffline !== undefined &&
     Number.isFinite(fastOffline.seconds) &&
     fastOffline.seconds < 365 * 24 * 60 * 60;
@@ -78,10 +82,16 @@ export function buildRecommendations(analysis: AnalysisResult): Recommendation[]
       body: 'Length helps only when the extra characters are unpredictable. For a human-chosen value, a randomly generated passphrase of six or more words is easier to remember than a short, complex string.',
       group: 'candidate',
     });
-  } else if (analysis.score >= 3 && fastOfflineVulnerable && candidate.length === 0) {
+  } else if (analysis.score >= 3 && fastOfflineUnderDay && candidate.length === 0) {
     candidate.push({
       title: 'Add more length against fast offline attacks',
-      body: 'This candidate resists rate-limited logins, but a fast offline hash database (such as leaked MD5 or SHA-1 hashes) could crack it much sooner. Add more random characters or use a six-word passphrase.',
+      body: 'This candidate resists rate-limited logins, but a fast offline hash database (such as leaked MD5 or SHA-1 hashes) could crack it within hours. Add more random characters or use a six-word passphrase.',
+      group: 'candidate',
+    });
+  } else if (analysis.score >= 3 && fastOfflineUnderYear && candidate.length === 0) {
+    candidate.push({
+      title: 'Extend length for centuries-grade protection',
+      body: 'Already solid against online logins and slow password hashing. Adding a few more random characters or using a generated passphrase pushes even fast offline GPU cracking from months to centuries.',
       group: 'candidate',
     });
   } else if (analysis.score >= 3 && candidate.length === 0) {

@@ -12,6 +12,7 @@ export interface AssessmentVerdict {
   fastHashWeakLink: AttackScenario | null;
 }
 
+const ONE_DAY_SECONDS = 24 * 60 * 60;
 const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60;
 
 const PATTERN_PHRASES: Partial<Record<PatternKind, string>> = {
@@ -55,7 +56,9 @@ export function buildVerdict(result: AnalysisResult): AssessmentVerdict {
   const fastHash =
     result.attacks.find((attack) => attack.key === 'offline_fast_hashing_1e10_per_second') ?? null;
   const hasHighCustom = result.customMatches.some((match) => match.severity === 'high');
-  const fastHashIsWeak =
+  const fastHashUnderDay =
+    fastHash !== null && Number.isFinite(fastHash.seconds) && fastHash.seconds < ONE_DAY_SECONDS;
+  const fastHashUnderYear =
     fastHash !== null && Number.isFinite(fastHash.seconds) && fastHash.seconds < ONE_YEAR_SECONDS;
   const patternSummary = describeDetectedPatterns(result);
 
@@ -126,11 +129,11 @@ export function buildVerdict(result: AnalysisResult): AssessmentVerdict {
       explanation:
         'It looks strong to a generic estimator, but matches an imported dictionary term that lowers resistance against targeted attacks.',
       fastestAttack,
-      fastHashWeakLink: fastHashIsWeak ? fastHash : null,
+      fastHashWeakLink: fastHashUnderDay ? fastHash : null,
     };
   }
 
-  if (fastHashIsWeak && fastHash) {
+  if (fastHashUnderDay && fastHash) {
     const patternIntro = patternSummary ? `Built with ${patternSummary}. ` : '';
     return {
       tier: 2,
@@ -143,10 +146,13 @@ export function buildVerdict(result: AnalysisResult): AssessmentVerdict {
     };
   }
 
-  if (result.score === 3) {
+  if (result.score === 3 || (fastHashUnderYear && fastHash)) {
+    const fastNote = fastHash
+      ? `Against a fast unthrottled hash dump it holds for ${fastHash.display}; adding a bit more length raises that to centuries.`
+      : 'It provides solid protection across online logins and offline cracking.';
     const reason = patternSummary
-      ? `Uses ${patternSummary}, yet remains long enough to resist most online and offline guessing.`
-      : 'No dominant weak patterns found. It provides solid protection across online and offline attacks.';
+      ? `Uses ${patternSummary}, yet remains long enough to resist online logins and slow hashing. ${fastNote}`
+      : `Resists rate-limited logins and slow password hashing well. ${fastNote}`;
     return {
       tier: 3,
       label: 'Good',

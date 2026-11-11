@@ -95,6 +95,28 @@ describe('buildVerdict', () => {
     expect(verdict.explanation).toContain('8 hours');
   });
 
+  it('rates high-score candidates surviving days to months on fast hashes as Good', () => {
+    const result = makeResult({
+      score: 4,
+      attacks: [
+        ...makeResult().attacks.slice(0, 3),
+        {
+          key: 'offline_fast_hashing_1e10_per_second',
+          label: 'Offline, fast hash',
+          model: 'offline',
+          rateLabel: '10 billion guesses / second',
+          seconds: 10_000_000,
+          display: '4 months',
+        },
+      ],
+    });
+    const verdict = buildVerdict(result);
+    expect(verdict.tier).toBe(3);
+    expect(verdict.label).toBe('Good');
+    expect(verdict.qualifier).toBeNull();
+    expect(verdict.explanation).toContain('4 months');
+  });
+
   it('caps score when high-severity custom dictionary terms match', () => {
     const verdict = buildVerdict(
       makeResult({
