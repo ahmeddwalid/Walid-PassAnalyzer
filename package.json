@@ -1,6 +1,6 @@
 {
   "name": "walid-passanalyzer",
-  "homepage": "https://ahmeddwalid.github.io/Walid-PassAnalyzer/",
+  "homepage": "https://passanalyzer.ahmeddwalid.me/",
   "description": "A local-first password strength instrument: analysis, audited generation, comparison, dictionaries, and optional k-anonymous breach checks.",
   "author": "Ahmed Walid",
   "license": "Apache-2.0",

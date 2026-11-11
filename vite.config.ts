@@ -56,7 +56,7 @@ function productionCsp(): Plugin {
 }
 
 export default defineConfig({
-  base: process.env.VITE_BASE_PATH || '/Walid-PassAnalyzer/',
+  base: process.env.VITE_BASE_PATH || '/',
   plugins: [react(), productionCsp()],
   build: {
     target: 'es2020',
