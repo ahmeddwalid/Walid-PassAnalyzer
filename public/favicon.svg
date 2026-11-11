@@ -1,5 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Walid PassAnalyzer">
-  <rect width="32" height="32" rx="3" fill="#102B2D"/>
-  <path d="M8 22V13M13 22V8M18 22V16M23 22V11" stroke="#F5F2E9" stroke-width="2.2" stroke-linecap="square"/>
-  <circle cx="23" cy="24.5" r="2" fill="#E56B50"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" role="img" aria-label="Walid PassAnalyzer">
+  <rect x="2" y="2" width="32" height="32" rx="8" fill="#13294B"/>
+  <circle cx="18" cy="18.5" r="7.5" fill="none" stroke="#F8FAFC" stroke-width="2.5" stroke-dasharray="36 12" stroke-dashoffset="3" stroke-linecap="round"/>
+  <path d="M18 7.5v3" stroke="#F8FAFC" stroke-width="2.4" stroke-linecap="round"/>
+  <circle cx="18" cy="18.5" r="2.8" fill="#6096FF"/>
 </svg>

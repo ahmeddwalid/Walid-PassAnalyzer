@@ -20,7 +20,7 @@ function write(key: string, value: string): void {
 export function readTheme(): Theme {
   const rootTheme = document.documentElement.dataset.theme;
   if (rootTheme === 'dark' || rootTheme === 'light') return rootTheme;
-  return read(STORAGE_KEYS.theme) === 'dark' ? 'dark' : 'light';
+  return read(STORAGE_KEYS.theme) === 'light' ? 'light' : 'dark';
 }
 
 export function persistTheme(theme: Theme): void {

@@ -34,7 +34,7 @@ export default function App() {
     document.documentElement.style.colorScheme = theme;
     persistTheme(theme);
     const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-    if (meta) meta.content = theme === 'dark' ? '#0C1F21' : '#F5F2E9';
+    if (meta) meta.content = theme === 'dark' ? '#0B111A' : '#F4F6FA';
   }, [theme]);
 
   useEffect(() => {

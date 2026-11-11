@@ -10,11 +10,11 @@ import react from '@vitejs/plugin-react';
 const THEME_INIT = `(() => {
   try {
     const stored = localStorage.getItem('pa.theme');
-    const theme = stored === 'dark' || stored === 'light' ? stored : 'light';
+    const theme = stored === 'dark' || stored === 'light' ? stored : 'dark';
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
   } catch {
-    document.documentElement.dataset.theme = 'light';
+    document.documentElement.dataset.theme = 'dark';
   }
 })();`;
 

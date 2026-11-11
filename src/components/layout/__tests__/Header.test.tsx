@@ -20,7 +20,9 @@ describe('Header navigation', () => {
       'aria-expanded',
       'true',
     );
-    expect(document.activeElement).toBe(screen.getByRole('link', { name: '01 Analyze' }));
+    expect(document.activeElement).toBe(
+      screen.getByRole('link', { name: /analyze check password strength/i }),
+    );
 
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('navigation', { name: 'Mobile primary' })).toBeNull();

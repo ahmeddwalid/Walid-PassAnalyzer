@@ -15,8 +15,7 @@ Attribution: Electronic Frontier Foundation, CC BY 3.0 US. Source and license li
 
 ## Fonts
 
-- Instrument Sans: SIL Open Font License 1.1. Copyright 2022 The Instrument Sans Project Authors.
-- Newsreader: SIL Open Font License 1.1. Copyright 2020 The Newsreader Project Authors.
+- Onest Variable: SIL Open Font License 1.1. Copyright 2021 The Onest Project Authors.
 - IBM Plex Mono: SIL Open Font License 1.1. Copyright 2017 IBM Corp.
 
 Full license texts are stored alongside the font files in `public/fonts/`.
