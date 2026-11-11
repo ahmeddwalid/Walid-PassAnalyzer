@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
 
 const routes = [
-  { path: '#/analyze', heading: 'Password analysis' },
+  { path: '#/analyze', heading: 'How strong is your password?' },
   { path: '#/generate', heading: 'Randomness' },
   { path: '#/compare', heading: 'Choose with evidence' },
   { path: '#/dictionaries', heading: 'Make the local model' },
@@ -26,10 +26,12 @@ test.describe('analysis', () => {
     await expect(page.getByText('Whitespace-only input')).toBeVisible();
 
     await input.fill('Tr0ub4dor&3');
-    await expect(page.getByRole('heading', { name: /guessable/i })).toBeVisible();
-    await expect(page.getByText('Estimated work to exhaust')).toBeVisible();
-    await expect(page.getByText('Why this result')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Pwned Passwords' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Fair' })).toBeVisible();
+    await expect(page.getByText('Fastest crack estimate')).toBeVisible();
+    await page.getByRole('button', { name: /explore detailed analysis/i }).click();
+    await expect(page.getByRole('heading', { name: 'Estimated time to crack' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Detected patterns' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Check known breaches' })).toBeVisible();
     expect(errors).toEqual([]);
   });
 
@@ -115,7 +117,10 @@ test.describe('navigation', () => {
     await page.goto('#/analyze');
     await page.getByRole('button', { name: /open navigation menu/i }).click();
     await expect(page.getByRole('navigation', { name: 'Mobile primary' })).toBeVisible();
-    await page.getByRole('link', { name: '06 Privacy' }).click();
+    await page
+      .getByRole('navigation', { name: 'Mobile primary' })
+      .getByRole('link', { name: 'Privacy' })
+      .click();
     await expect(page.getByRole('heading', { level: 1 })).toContainText('What leaves');
     await expect(page.getByRole('navigation', { name: 'Mobile primary' })).toHaveCount(0);
   });
@@ -152,15 +157,15 @@ test.describe('accessibility', () => {
   }
 });
 
-test.describe('dark theme accessibility', () => {
-  test('axe scans the six primary routes in the dark theme', async ({ page }) => {
+test.describe('light theme accessibility', () => {
+  test('axe scans the six primary routes in the light theme', async ({ page }) => {
     await page.goto('#/analyze');
-    await page.evaluate(() => localStorage.setItem('pa.theme', 'dark'));
+    await page.evaluate(() => localStorage.setItem('pa.theme', 'light'));
     await page.reload({ waitUntil: 'networkidle' });
     for (const route of routes) {
       await page.goto(route.path);
       await page.waitForLoadState('networkidle');
-      await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
       const results = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
         .analyze();
