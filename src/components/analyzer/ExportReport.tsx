@@ -48,26 +48,27 @@ export function ExportReport({ result, breach, disabled }: ExportReportProps) {
   const busy = state === 'pdf' || state === 'text';
 
   return (
-    <section className="panel export-panel" aria-labelledby="export-title">
-      <div className="panel-heading">
+    <section className="panel utility-card" aria-labelledby="export-title">
+      <div className="detail-card__head">
         <div>
-          <p className="eyebrow">Local export</p>
-          <h2 id="export-title" className="panel-title">
-            Assessment report
+          <h2 id="export-title" className="detail-card__title">
+            Export summary
           </h2>
+          <p className="detail-card__subtitle">
+            Save a local PDF or text report with estimates, patterns, and advice. No password is
+            ever included.
+          </p>
         </div>
-        <span className="mono-meta">no password included</span>
+        <span className="local-tag">
+          <Icon name="shield" size={13} />
+          Local only
+        </span>
       </div>
-
-      <p className="export-intro">
-        Generate a readable report with the verdict, attack estimates, pattern explanations,
-        recommendations, and method limits. The report is produced in this tab and never uploaded.
-      </p>
 
       <div className="export-actions">
         <button
           type="button"
-          className="button button--primary"
+          className="button button--secondary"
           onClick={() => run('pdf')}
           disabled={disabled || busy}
         >
@@ -91,8 +92,7 @@ export function ExportReport({ result, breach, disabled }: ExportReportProps) {
         </p>
       ) : (
         <p className="export-note">
-          The filename is generic. The PDF metadata and body contain no candidate text and no
-          imported dictionary words.
+          Generated locally in this tab with generic metadata and zero imported dictionary words.
         </p>
       )}
 

@@ -1,117 +1,174 @@
-import { SCORE_VERDICTS } from '../../constants';
-import { formatGuesses, formatPowerOfTen } from '../../lib/format';
-import type { AnalysisResult } from '../../types';
-import { ScoreScale } from '../ui/ScoreScale';
+import { hashForRoute } from '../../hooks/useRoute';
+import { buildRecommendations } from '../../lib/recommendations';
+import { buildVerdict } from '../../lib/verdict';
+import type { AnalysisResult, BreachResult } from '../../types';
+import { Icon } from '../Icon';
 import { Callout } from '../ui/Callout';
+import { StrengthMeter } from './StrengthMeter';
 
 interface AssessmentSummaryProps {
   result: AnalysisResult;
+  breach: BreachResult | null;
+  detailsOpen: boolean;
+  onToggleDetails: () => void;
+  onJumpToBreach: () => void;
 }
 
-export function AssessmentSummary({ result }: AssessmentSummaryProps) {
-  const verdict = SCORE_VERDICTS[result.score];
-  const fastHash = result.attacks.find(
-    (attack) => attack.key === 'offline_fast_hashing_1e10_per_second',
-  );
+export function AssessmentSummary({
+  result,
+  breach,
+  detailsOpen,
+  onToggleDetails,
+  onJumpToBreach,
+}: AssessmentSummaryProps) {
+  const verdict = buildVerdict(result);
+  const recommendations = buildRecommendations(result);
+  const topCandidateAdvice = recommendations.find((item) => item.group === 'candidate');
   const highCustom = result.customMatches.filter((match) => match.severity === 'high');
-  const fastHashIsWeakLink =
-    result.score >= 3 &&
-    fastHash !== undefined &&
-    Number.isFinite(fastHash.seconds) &&
-    fastHash.seconds < 365 * 24 * 60 * 60;
+  const isWeakOrCapped = verdict.tier <= 2 || Boolean(breach?.found);
 
   return (
-    <section className="panel assessment-summary" aria-labelledby="assessment-title">
-      <div className="assessment-summary__top">
-        <div>
-          <p className="eyebrow">Assessment</p>
-          <h2 id="assessment-title" className="assessment-verdict">
+    <section
+      className={`verdict-card verdict-card--${verdict.tone}`}
+      aria-labelledby="assessment-title"
+    >
+      <div className="verdict-card__header">
+        <div className="verdict-card__title-group">
+          <div className="verdict-badge-row">
+            <span className={`verdict-pill verdict-pill--${verdict.tone}`}>
+              <Icon name={verdict.tier >= 3 ? 'check' : 'alert'} size={14} />
+              <span>Assessment</span>
+            </span>
+            {verdict.qualifier ? <span className="qualifier-pill">{verdict.qualifier}</span> : null}
+            {breach?.found ? (
+              <span className="verdict-pill verdict-pill--danger">
+                <Icon name="alert" size={14} />
+                <span>Found in breach</span>
+              </span>
+            ) : null}
+          </div>
+          <h2 id="assessment-title" className="verdict-heading">
             {verdict.label}
           </h2>
         </div>
-        <span className="model-badge">
-          zxcvbn <strong>{result.score}</strong> / 4
-        </span>
+
+        {verdict.fastestAttack ? (
+          <div className="verdict-crack-readout">
+            <span className="verdict-crack-readout__label">Fastest crack estimate</span>
+            <strong className="verdict-crack-readout__value">
+              {verdict.fastestAttack.display}
+            </strong>
+            <span className="verdict-crack-readout__route">{verdict.fastestAttack.label}</span>
+          </div>
+        ) : null}
       </div>
 
-      <p className="assessment-summary__body">{verdict.summary}</p>
+      <StrengthMeter
+        tier={verdict.tier}
+        tone={verdict.tone}
+        qualifier={verdict.qualifier}
+        zxcvbnScore={result.score}
+      />
 
-      {highCustom.length > 0 ? (
-        <Callout
-          tone="accent"
-          icon="dictionary"
-          title="A known organization term reduces the effective space"
-        >
-          {highCustom.length === 1
-            ? 'One high-severity imported match covers'
-            : `${highCustom.length} high-severity imported matches cover`}{' '}
-          {highCustom.reduce((sum, match) => sum + match.wordLength, 0).toLocaleString('en-US')}{' '}
-          characters. The headline band is a generic model score; anyone holding the same list
-          starts from a smaller space.
+      <p className="verdict-explanation">{verdict.explanation}</p>
+
+      {breach?.found ? (
+        <Callout tone="danger" icon="alert" title="Exposed in known data breaches">
+          This password appeared{' '}
+          <strong>
+            {breach.count.toLocaleString('en-US')} {breach.count === 1 ? 'time' : 'times'}
+          </strong>{' '}
+          in the Pwned Passwords dataset. Do not use it on any account.
         </Callout>
       ) : null}
-
-      {fastHashIsWeakLink && fastHash ? (
-        <Callout tone="warning" icon="alert" title="The weakest modelled route is much cheaper">
-          The score band reflects a slow-hash scenario. Against a fast-hash database, the estimate
-          drops to <strong>{fastHash.display}</strong>. Do not read the headline as protection
-          against every attack model.
-        </Callout>
-      ) : null}
-
-      <ScoreScale score={result.score} />
-
-      <dl className="metric-grid">
-        <div className="metric">
-          <dt>Estimated guesses</dt>
-          <dd>
-            {formatPowerOfTen(result.guessesLog10)}
-            <span className="metric__sub">{formatGuesses(result.guessesLog10)}</span>
-          </dd>
-        </div>
-        <div className="metric">
-          <dt>Length</dt>
-          <dd>
-            {result.codePointLength.toLocaleString('en-US')}
-            <span className="metric__sub">characters</span>
-          </dd>
-        </div>
-        <div className="metric">
-          <dt>Recognized coverage</dt>
-          <dd>
-            {Math.round(result.patternCoverage * 100)}%
-            <span className="metric__sub">of characters</span>
-          </dd>
-        </div>
-        <div className="metric">
-          <dt>Model time</dt>
-          <dd>
-            {result.calcTimeMs.toLocaleString('en-US')} ms
-            <span className="metric__sub">local computation</span>
-          </dd>
-        </div>
-      </dl>
 
       {result.onlyWhitespace ? (
         <Callout tone="warning" icon="alert" title="Whitespace-only input">
-          Spaces count as characters, but a value made only of whitespace has almost no uncertainty.
-          It is assessed here rather than silently discarded.
+          Spaces count toward length, but a password made only of whitespace has almost no
+          uncertainty. Use words or random characters instead.
+        </Callout>
+      ) : null}
+
+      {highCustom.length > 0 ? (
+        <Callout tone="accent" icon="dictionary" title="Matches an imported dictionary term">
+          {highCustom.length === 1
+            ? 'One imported dictionary match covers '
+            : `${highCustom.length} imported dictionary matches cover `}
+          {highCustom.reduce((sum, match) => sum + match.wordLength, 0).toLocaleString('en-US')}{' '}
+          characters. Anyone with that word list can guess this much faster.
+        </Callout>
+      ) : result.dictionaryAdjusted ? (
+        <Callout tone="accent" icon="dictionary" title="Imported dictionary adjusted the score">
+          An imported term was detected and lowered the estimate. The matched word is never shown or
+          exported.
+        </Callout>
+      ) : null}
+
+      {verdict.fastHashWeakLink ? (
+        <Callout tone="warning" icon="alert" title="Vulnerable if a service stores fast hashes">
+          While strong against rate-limited logins and slow hashes (like bcrypt or Argon2), a fast
+          offline hash database could crack it in{' '}
+          <strong>{verdict.fastHashWeakLink.display}</strong>.
         </Callout>
       ) : null}
 
       {result.hasUnicode ? (
-        <Callout tone="neutral" icon="info" title="Unicode is supported">
-          The model handles non-ASCII characters, but some services normalize or reject them. Check
-          the account provider's rules before relying on this value.
+        <Callout tone="neutral" icon="info" title="Non-ASCII characters detected">
+          Unicode characters are included in this estimate, though some websites reject or normalize
+          them. Check the service's rules before relying on this password.
         </Callout>
       ) : null}
 
-      {result.dictionaryAdjusted ? (
-        <Callout tone="accent" icon="dictionary" title="Imported dictionary changed the result">
-          An organization-specific term was treated as a known input, which lowers the estimate. The
-          matched word is not shown or exported.
-        </Callout>
+      {topCandidateAdvice ? (
+        <div className="top-advice">
+          <div className="top-advice__icon" aria-hidden="true">
+            <Icon name={isWeakOrCapped ? 'key' : 'shield'} size={17} />
+          </div>
+          <div className="top-advice__body">
+            <p className="top-advice__title">{topCandidateAdvice.title}</p>
+            <p className="top-advice__text">{topCandidateAdvice.body}</p>
+          </div>
+        </div>
       ) : null}
+
+      <div className="verdict-actions">
+        {isWeakOrCapped ? (
+          <a className="button button--primary" href={hashForRoute('generate')}>
+            <Icon name="generate" size={16} />
+            Generate a stronger password
+          </a>
+        ) : (
+          <button type="button" className="button button--primary" onClick={onJumpToBreach}>
+            <Icon name="offline" size={16} />
+            Check known breaches
+          </button>
+        )}
+
+        <button
+          type="button"
+          className="button button--secondary"
+          aria-expanded={detailsOpen}
+          aria-controls="detailed-analysis"
+          onClick={onToggleDetails}
+        >
+          <span>{detailsOpen ? 'Hide detailed analysis' : 'Explore detailed analysis'}</span>
+          <Icon
+            name="chevronDown"
+            size={16}
+            className={`chevron-icon${detailsOpen ? ' chevron-icon--open' : ''}`}
+          />
+        </button>
+
+        {isWeakOrCapped ? (
+          <button type="button" className="button button--ghost" onClick={onJumpToBreach}>
+            Check known breaches
+          </button>
+        ) : (
+          <a className="button button--ghost" href={hashForRoute('generate')}>
+            Open generator
+          </a>
+        )}
+      </div>
     </section>
   );
 }

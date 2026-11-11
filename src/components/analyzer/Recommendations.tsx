@@ -9,37 +9,34 @@ export function Recommendations({ result }: RecommendationsProps) {
   const recommendations = buildRecommendations(result);
   const candidate = recommendations.filter((item) => item.group === 'candidate');
   const hygiene = recommendations.filter((item) => item.group === 'hygiene');
+  const additional = candidate.slice(1);
 
   return (
-    <section className="panel recommendations-panel" aria-labelledby="recommendations-title">
-      <div className="panel-heading">
+    <section className="detail-card" aria-labelledby="recommendations-title">
+      <div className="detail-card__head">
         <div>
-          <p className="eyebrow">Next actions</p>
-          <h2 id="recommendations-title" className="panel-title">
-            What to do next
-          </h2>
+          <h3 id="recommendations-title" className="detail-card__title">
+            Recommendations &amp; account hygiene
+          </h3>
+          <p className="detail-card__subtitle">
+            Additional ways to strengthen this password and reduce account takeover risk.
+          </p>
         </div>
-        <span className="mono-meta">prioritized</span>
       </div>
 
-      <ol className="recommendation-list">
-        {candidate.map((recommendation, index) => (
-          <li key={recommendation.title} className="recommendation">
-            <span className="recommendation__number">{String(index + 1).padStart(2, '0')}</span>
-            <div>
-              <h3>{recommendation.title}</h3>
+      {additional.length > 0 ? (
+        <ul className="recommendation-list">
+          {additional.map((recommendation) => (
+            <li key={recommendation.title} className="recommendation">
+              <h4>{recommendation.title}</h4>
               <p>{recommendation.body}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
       <div className="hygiene-block">
-        <p className="eyebrow">Account hygiene</p>
-        <p className="hygiene-block__intro">
-          These controls do not change the local estimate, but they change the consequences of a
-          compromised password.
-        </p>
+        <p className="hygiene-block__heading">Account-level protections</p>
         <ul className="hygiene-list">
           {hygiene.map((item) => (
             <li key={item.title}>

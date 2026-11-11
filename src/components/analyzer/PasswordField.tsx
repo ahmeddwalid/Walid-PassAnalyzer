@@ -36,14 +36,13 @@ export function PasswordField({
   const count = codePointLength(password);
 
   return (
-    <section className="panel password-panel" aria-label="Password analysis input">
-      <div className="panel-heading">
-        <label id={`${inputId}-label`} htmlFor={inputId} className="field-label">
+    <section className="password-card" aria-label="Password analysis input">
+      <div className="password-card__top">
+        <label htmlFor={inputId} className="password-card__label">
           Password to analyze
         </label>
-        <span className="local-tag">
-          <span className="status-dot" aria-hidden="true" />
-          Stays in this tab
+        <span id={countId} className="password-card__count">
+          {count.toLocaleString('en-US')} {count === 1 ? 'character' : 'characters'}
         </span>
       </div>
 
@@ -61,7 +60,7 @@ export function PasswordField({
           autoCapitalize="none"
           spellCheck={false}
           inputMode="text"
-          placeholder="Enter a candidate"
+          placeholder="Type or paste a test password"
         />
         <div className="password-control__actions">
           <button
@@ -90,16 +89,7 @@ export function PasswordField({
         </div>
       </div>
 
-      <div className="field-meta">
-        <span id={countId} className="mono-meta">
-          {count.toLocaleString('en-US')} {count === 1 ? 'character' : 'characters'}
-        </span>
-        <span id={helpId} className="field-help">
-          Spaces and Unicode are preserved. Nothing is trimmed or modified.
-        </span>
-      </div>
-
-      <div className="password-panel__footer">
+      <div className="password-card__footer">
         <p
           id={statusId}
           className={`analysis-status analysis-status--${statusTone}`}
@@ -107,35 +97,39 @@ export function PasswordField({
           aria-live="polite"
         >
           <span className="analysis-status__mark" aria-hidden="true" />
-          {status}
+          <span>{status}</span>
         </p>
-        <details className="inline-details">
-          <summary>Privacy controls</summary>
-          <div className="inline-details__body">
-            <label className="check-row">
-              <input
-                type="checkbox"
-                checked={autoClear}
-                onChange={(event) => onAutoClearChange(event.target.checked)}
-              />
-              <span>Clear the field after five minutes of inactivity</span>
-            </label>
-            <p>
-              The timer resets whenever you type. Only this preference is stored locally; the
-              candidate is never written to storage. Automatic clearing removes the value from this
-              component, but browsers cannot guarantee that every copy in memory is erased.
-            </p>
-          </div>
-        </details>
-        {autoClearMessage ? (
-          <p className="auto-clear-note" role="status">
-            {autoClearMessage}
-          </p>
-        ) : null}
+
+        <span id={helpId} className="visually-hidden">
+          Spaces and Unicode characters are preserved exactly as typed.
+        </span>
+
+        <label
+          className="auto-clear-toggle"
+          title="Clears the input automatically after 5 minutes of inactivity. Only this toggle setting is saved locally."
+        >
+          <input
+            type="checkbox"
+            checked={autoClear}
+            onChange={(event) => onAutoClearChange(event.target.checked)}
+          />
+          <span>Auto-clear in 5 min</span>
+        </label>
       </div>
 
+      {autoClearMessage ? (
+        <p className="auto-clear-note" role="status">
+          {autoClearMessage}
+        </p>
+      ) : null}
+
       {error ? (
-        <Callout tone="danger" icon="alert" title="Assessment unavailable">
+        <Callout
+          tone="danger"
+          icon="alert"
+          title="Unable to analyze"
+          className="password-card__error"
+        >
           {error}
         </Callout>
       ) : null}

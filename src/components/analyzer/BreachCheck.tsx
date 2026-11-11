@@ -14,6 +14,7 @@ type CheckStatus = 'idle' | 'loading' | 'done' | 'error';
 
 export function BreachCheck({ password, result, onResult }: BreachCheckProps) {
   const [status, setStatus] = useState<CheckStatus>('idle');
+  const [checkedPassword, setCheckedPassword] = useState('');
   const [error, setError] = useState('');
   const requestId = useRef(0);
 
@@ -24,9 +25,15 @@ export function BreachCheck({ password, result, onResult }: BreachCheckProps) {
     };
   }, [password]);
 
+  const effectiveStatus: CheckStatus =
+    checkedPassword === password || (status === 'loading' && checkedPassword === password)
+      ? status
+      : 'idle';
+
   const runCheck = async () => {
     requestId.current += 1;
     const currentRequest = requestId.current;
+    setCheckedPassword(password);
     setStatus('loading');
     setError('');
     onResult(null);
@@ -47,49 +54,25 @@ export function BreachCheck({ password, result, onResult }: BreachCheckProps) {
   };
 
   return (
-    <section className="panel breach-panel" aria-labelledby="breach-title">
-      <div className="panel-heading">
+    <section
+      id="breach-check-section"
+      className="panel utility-card"
+      aria-labelledby="breach-title"
+    >
+      <div className="detail-card__head">
         <div>
-          <p className="eyebrow">Optional network check</p>
-          <h2 id="breach-title" className="panel-title">
-            Pwned Passwords
+          <h2 id="breach-title" tabIndex={-1} className="detail-card__title">
+            Check known breaches
           </h2>
+          <p className="detail-card__subtitle">
+            Check if this password appears in public leaks. Only the first 5 characters of a SHA-1
+            hash leave your browser.
+          </p>
         </div>
         <span className="network-tag">
           <Icon name="external" size={14} />
-          opt-in
+          Opt-in
         </span>
-      </div>
-
-      <p className="breach-intro">
-        A strong estimate cannot tell you whether a password has already appeared in a breach. This
-        optional check uses the Have I Been Pwned range API and only runs when you press the button.
-      </p>
-
-      <div className="breach-disclosure">
-        <p>
-          <strong>What leaves this browser:</strong> the first five characters of the SHA-1 digest
-          (20 bits), plus ordinary request metadata such as your IP address and browser user agent.
-          The password and the complete digest stay here.
-        </p>
-        <details className="inline-details">
-          <summary>Read the exact protocol and its limits</summary>
-          <div className="inline-details__body">
-            <p>
-              The candidate is hashed locally with SHA-1. Only the first five hex characters are
-              requested from <code>api.pwnedpasswords.com/range/&lt;prefix&gt;</code>. The response
-              contains suffixes and occurrence counts; the comparison happens entirely in this tab.
-              The request includes <code>Add-Padding: true</code>, which pads responses to reduce a
-              narrow prefix's visibility.
-            </p>
-            <p>
-              k-anonymity reduces disclosure but is not zero information. The service can still see
-              your IP address, timing, and the prefix. This application does not proxy the request
-              or hide that metadata. If that trade-off is unacceptable, do not run the check; local
-              analysis continues to work offline.
-            </p>
-          </div>
-        </details>
       </div>
 
       <div className="breach-actions">
@@ -97,27 +80,43 @@ export function BreachCheck({ password, result, onResult }: BreachCheckProps) {
           type="button"
           className="button button--primary"
           onClick={runCheck}
-          disabled={password.length === 0 || status === 'loading'}
-          aria-busy={status === 'loading'}
+          disabled={password.length === 0 || effectiveStatus === 'loading'}
+          aria-busy={effectiveStatus === 'loading'}
         >
-          <Icon name={status === 'loading' ? 'clock' : 'offline'} size={16} />
-          {status === 'loading' ? 'Checking prefix...' : 'Check this candidate'}
+          <Icon name={effectiveStatus === 'loading' ? 'clock' : 'offline'} size={16} />
+          {effectiveStatus === 'loading' ? 'Checking prefix...' : 'Check this candidate'}
         </button>
-        <span className="mono-meta">no automatic requests</span>
+        <span className="mono-meta">No automatic requests</span>
       </div>
 
+      <details className="inline-details">
+        <summary>How k-anonymity works &amp; limits</summary>
+        <div className="inline-details__body">
+          <p>
+            The candidate is hashed locally with SHA-1. Only the first five hex characters are
+            requested from <code>api.pwnedpasswords.com/range/&lt;prefix&gt;</code> with{' '}
+            <code>Add-Padding: true</code>, and matching happens in this tab.
+          </p>
+          <p>
+            Ordinary HTTP metadata (IP address, timing, and the five-character prefix) is visible to
+            the remote service. Skip this check if that trade-off is unacceptable; all other
+            analysis stays offline.
+          </p>
+        </div>
+      </details>
+
       <div aria-live="polite">
-        {status === 'loading' ? (
+        {effectiveStatus === 'loading' ? (
           <p className="breach-status">Contacting the range API with a five-character prefix.</p>
         ) : null}
 
-        {status === 'error' ? (
+        {effectiveStatus === 'error' ? (
           <Callout tone="danger" icon="alert" title="Check could not complete">
             {error}
           </Callout>
         ) : null}
 
-        {status === 'done' && result ? (
+        {effectiveStatus === 'done' && result ? (
           result.found ? (
             <Callout tone="danger" icon="alert" title="Found in the breach corpus">
               This candidate appears {result.count.toLocaleString('en-US')}{' '}
@@ -133,7 +132,7 @@ export function BreachCheck({ password, result, onResult }: BreachCheckProps) {
           )
         ) : null}
 
-        {status === 'done' && !result ? (
+        {effectiveStatus === 'done' && !result ? (
           <p className="breach-status">The check completed without a result. Try again.</p>
         ) : null}
       </div>

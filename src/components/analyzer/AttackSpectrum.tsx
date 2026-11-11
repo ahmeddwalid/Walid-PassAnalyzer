@@ -1,99 +1,88 @@
 import { ATTACK_DEFINITIONS } from '../../constants';
-import { clampLogPosition, secondsBeyondScale } from '../../lib/format';
+import { getFastestAttack } from '../../lib/verdict';
 import type { AnalysisResult } from '../../types';
 
 interface AttackSpectrumProps {
   result: AnalysisResult;
 }
 
-const TICKS = [
-  { label: '1 sec', seconds: 1 },
-  { label: '1 hour', seconds: 3_600 },
-  { label: '1 day', seconds: 86_400 },
-  { label: '1 year', seconds: 31_557_600 },
-  { label: '100 years', seconds: 3_155_760_000 },
-];
+const SCENARIO_CONTEXT: Record<string, string> = {
+  online_throttling_100_per_hour: 'Login form with rate limits',
+  online_no_throttling_10_per_second: 'Login form without rate limits',
+  offline_slow_hashing_1e4_per_second: 'Leaked database (bcrypt / Argon2)',
+  offline_fast_hashing_1e10_per_second: 'Leaked database (MD5 / SHA-1 / GPU)',
+};
+
+const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60;
 
 export function AttackSpectrum({ result }: AttackSpectrumProps) {
-  const fastest = [...result.attacks].sort((a, b) => a.seconds - b.seconds)[0];
+  const fastest = getFastestAttack(result);
 
   return (
-    <section className="panel attack-panel" aria-labelledby="attack-title">
-      <div className="panel-heading">
+    <section className="detail-card" aria-labelledby="attack-title">
+      <div className="detail-card__head">
         <div>
-          <p className="eyebrow">Resistance</p>
-          <h2 id="attack-title" className="panel-title">
-            Estimated work to exhaust
-          </h2>
+          <h3 id="attack-title" className="detail-card__title">
+            Estimated time to crack
+          </h3>
+          <p className="detail-card__subtitle">
+            {fastest ? (
+              <>
+                Most concerning route: <strong>{fastest.label.toLowerCase()}</strong> (
+                <strong>{fastest.display}</strong>). These are illustrative estimates, not
+                guarantees for a specific service.
+              </>
+            ) : (
+              'No attack model is available for this candidate.'
+            )}
+          </p>
         </div>
-        <span className="mono-meta">log scale</span>
       </div>
 
-      <p className="attack-intro">
-        {fastest ? (
-          <>
-            The fastest modelled route is <strong>{fastest.label.toLowerCase()}</strong>, at{' '}
-            <strong>{fastest.display}</strong>.
-          </>
-        ) : (
-          'No attack model is available for this candidate.'
-        )}{' '}
-        These are illustrative rates, not a measurement of a specific service.
-      </p>
-
-      <div className="attack-legend" aria-hidden="true">
-        <span>
-          <span className="attack-shape attack-shape--online" /> Online interface
-        </span>
-        <span>
-          <span className="attack-shape attack-shape--offline" /> Offline hash database
-        </span>
-      </div>
-
-      <div className="attack-chart">
-        <div className="attack-ticks" aria-hidden="true">
-          {TICKS.map((tick) => (
-            <span
-              key={tick.label}
-              className="attack-tick"
-              style={{ left: `${clampLogPosition(tick.seconds)}%` }}
-            >
-              {tick.label}
-            </span>
-          ))}
-        </div>
-        <ul className="attack-rows">
-          {result.attacks.map((attack) => {
-            const position = clampLogPosition(attack.seconds);
-            const beyond = secondsBeyondScale(attack.seconds);
-            return (
-              <li key={attack.key} className="attack-row">
-                <div className="attack-row__label">
-                  <span
-                    className={`attack-shape attack-shape--${attack.model}`}
-                    aria-hidden="true"
-                  />
-                  <span>{attack.label}</span>
-                  <span className="attack-row__rate">{attack.rateLabel}</span>
-                </div>
-                <div className="attack-row__track" aria-hidden="true">
-                  <span
-                    className={`attack-marker attack-marker--${attack.model}${beyond ? ' attack-marker--beyond' : ''}`}
-                    style={{ left: `${position}%` }}
-                  />
-                </div>
-                <div className="attack-row__value">
-                  {attack.display}
-                  {beyond ? '+' : ''}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+      <div className="crack-table-wrap">
+        <table className="crack-table">
+          <caption className="visually-hidden">
+            Estimated crack times across four modeled attack scenarios
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Scenario</th>
+              <th scope="col">Assumed speed</th>
+              <th scope="col">Estimated time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {result.attacks.map((attack) => {
+              const isFastest = fastest?.key === attack.key;
+              const isVulnerable =
+                Number.isFinite(attack.seconds) && attack.seconds < ONE_YEAR_SECONDS;
+              return (
+                <tr
+                  key={attack.key}
+                  className={isFastest && isVulnerable ? 'crack-table__row--weakest' : undefined}
+                >
+                  <td>
+                    <span className="crack-scenario-name">{attack.label}</span>
+                    <span className="crack-scenario-desc">
+                      {SCENARIO_CONTEXT[attack.key] ?? ''}
+                    </span>
+                  </td>
+                  <td className="crack-rate">{attack.rateLabel}</td>
+                  <td className="crack-time">
+                    <span>{attack.display}</span>
+                    {isFastest && isVulnerable ? (
+                      <span className="weakest-tag">Fastest risk</span>
+                    ) : null}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
       <details className="disclosure">
-        <summary>Assumptions behind these rates</summary>
+        <summary>Model assumptions and limits</summary>
         <div className="disclosure__body">
           <ul className="assumption-list">
             {ATTACK_DEFINITIONS.map((definition) => (
@@ -104,10 +93,9 @@ export function AttackSpectrum({ result }: AttackSpectrumProps) {
             ))}
           </ul>
           <p>
-            zxcvbn assumes the attacker needs roughly half the total guess space on average. Real
-            hardware, rate limiting, password normalization, hash cost settings, and the attacker's
-            wordlists can shift these times by orders of magnitude. A long estimate is not a
-            guarantee.
+            Estimates assume an attacker tries roughly half the search space on average. Actual
+            hardware, hash work factors, rate limiting, and leaked wordlists can change times by
+            orders of magnitude.
           </p>
         </div>
       </details>

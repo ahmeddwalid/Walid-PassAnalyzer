@@ -11,8 +11,6 @@ import {
 } from '../../services/analysis';
 import type { AnalysisResult, BreachResult } from '../../types';
 import { Icon } from '../Icon';
-import { PageIntro } from '../layout/PageIntro';
-import { AnalyzerAside } from './AnalyzerAside';
 import { AnalyzerEmptyState } from './AnalyzerEmptyState';
 import { AssessmentSummary } from './AssessmentSummary';
 import { AttackSpectrum } from './AttackSpectrum';
@@ -36,7 +34,16 @@ export default function AnalyzerPage() {
   const [breach, setBreach] = useState<BreachResult | null>(null);
   const [autoClear, setAutoClear] = useState(readAutoClear);
   const [autoClearMessage, setAutoClearMessage] = useState('');
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleJumpToBreach = useCallback(() => {
+    const title = document.getElementById('breach-title');
+    if (title) {
+      title.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      title.focus();
+    }
+  }, []);
 
   const debounced = useDebouncedVersionedValue(password, inputVersion, ANALYSIS_DEBOUNCE_MS);
   const isStale = password.length > 0 && inputVersion !== analyzedVersion;
@@ -105,7 +112,10 @@ export default function AnalyzerPage() {
   const handlePasswordChange = useCallback((value: string) => {
     setPassword(value);
     setInputVersion((version) => version + 1);
-    if (value.length === 0) setResult(null);
+    if (value.length === 0) {
+      setResult(null);
+      setDetailsOpen(false);
+    }
     setBreach(null);
     setError(null);
     setAutoClearMessage('');
@@ -115,6 +125,7 @@ export default function AnalyzerPage() {
     setPassword('');
     setInputVersion((version) => version + 1);
     setResult(null);
+    setDetailsOpen(false);
     setBreach(null);
     setError(null);
     setAutoClearMessage('');
@@ -158,79 +169,70 @@ export default function AnalyzerPage() {
 
   return (
     <div className="page page--analyzer">
-      <PageIntro
-        number="01"
-        label="Analysis"
-        title={
-          <>
-            Password analysis,
-            <br />
-            <span className="display-title__accent">without the theater.</span>
-          </>
-        }
-        lede="Measure guessability locally, inspect the patterns behind the estimate, and see where the number stops being useful. No password is logged, stored, or transmitted."
-        meta={
-          <>
-            <span className="hero-meta-item">
-              <span className="status-dot" aria-hidden="true" /> Local model
-            </span>
-            <span className="hero-meta-item">zxcvbn 4.4.2</span>
-            <span className="hero-meta-item">0 bytes sent by default</span>
-            <span className="hero-meta-item">spaces and Unicode preserved</span>
-          </>
-        }
-      />
+      <div className="analyzer-shell">
+        <header className="analyzer-intro">
+          <h1 className="analyzer-intro__title">How strong is your password?</h1>
+          <p className="analyzer-intro__lede">
+            Check password strength immediately. Analysis runs locally in your browser without
+            storing or transmitting your input.
+          </p>
+        </header>
 
-      <div className="analyzer-layout">
-        <div className="analyzer-main">
-          <PasswordField
-            password={password}
-            onPasswordChange={handlePasswordChange}
-            onClear={handleClear}
-            inputRef={inputRef}
-            autoClear={autoClear}
-            onAutoClearChange={handleAutoClearChange}
-            autoClearMessage={autoClearMessage}
-            status={status}
-            statusTone={statusTone}
-            error={loadError ? null : error}
-          />
+        <PasswordField
+          password={password}
+          onPasswordChange={handlePasswordChange}
+          onClear={handleClear}
+          inputRef={inputRef}
+          autoClear={autoClear}
+          onAutoClearChange={handleAutoClearChange}
+          autoClearMessage={autoClearMessage}
+          status={status}
+          statusTone={statusTone}
+          error={loadError ? null : error}
+        />
 
-          {password.length === 0 ? <AnalyzerEmptyState onLoadExample={handleExample} /> : null}
+        {password.length === 0 ? <AnalyzerEmptyState onLoadExample={handleExample} /> : null}
 
-          {password.length > 0 && !result && !error && !loadError ? (
-            <div className="panel waiting-panel" role="status">
-              <Icon name="analyze" size={20} />
-              <div>
-                <p className="waiting-panel__title">
-                  {analyzerReady ? 'Reading the pattern sequence' : 'Loading the local model'}
-                </p>
-                <p>
-                  {analyzerReady
-                    ? 'The result will appear here. Computation is local and should finish immediately.'
-                    : 'The model is loaded once and then reused for every assessment.'}
-                </p>
-              </div>
+        {password.length > 0 && !result && !error && !loadError ? (
+          <div className="panel waiting-panel" role="status">
+            <Icon name="analyze" size={20} />
+            <div>
+              <p className="waiting-panel__title">
+                {analyzerReady ? 'Evaluating patterns' : 'Loading the local model'}
+              </p>
+              <p>
+                {analyzerReady
+                  ? 'Results appear as soon as the local check finishes.'
+                  : 'The model loads once in your browser and is reused locally.'}
+              </p>
             </div>
-          ) : null}
+          </div>
+        ) : null}
 
-          {result && password.length > 0 && !error && !loadError ? (
-            <div className={`analyzer-results${isStale ? ' is-stale' : ''}`} aria-busy={isStale}>
-              <AssessmentSummary result={result} />
+        {result && password.length > 0 && !error && !loadError ? (
+          <div className={`analyzer-results${isStale ? ' is-stale' : ''}`} aria-busy={isStale}>
+            <AssessmentSummary
+              result={result}
+              breach={breach}
+              detailsOpen={detailsOpen}
+              onToggleDetails={() => setDetailsOpen((open) => !open)}
+              onJumpToBreach={handleJumpToBreach}
+            />
+
+            <div id="detailed-analysis" className="details-panel" hidden={!detailsOpen}>
               <AttackSpectrum result={result} />
               <PatternFindings result={result} />
               <Recommendations result={result} />
-              {!isStale ? (
-                <>
-                  <BreachCheck password={password} result={breach} onResult={setBreach} />
-                  <ExportReport result={result} breach={breach} disabled={isStale} />
-                </>
-              ) : null}
             </div>
-          ) : null}
-        </div>
 
-        <AnalyzerAside />
+            {!isStale ? (
+              <div className="utility-grid">
+                <BreachCheck password={password} result={breach} onResult={setBreach} />
+                <ExportReport result={result} breach={breach} disabled={isStale} />
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );
