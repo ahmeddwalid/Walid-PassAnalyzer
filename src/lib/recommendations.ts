@@ -64,10 +64,24 @@ export function buildRecommendations(analysis: AnalysisResult): Recommendation[]
     });
   }
 
+  const fastOffline = analysis.attacks.find(
+    (attack) => attack.key === 'offline_fast_hashing_1e10_per_second',
+  );
+  const fastOfflineVulnerable =
+    fastOffline !== undefined &&
+    Number.isFinite(fastOffline.seconds) &&
+    fastOffline.seconds < 365 * 24 * 60 * 60;
+
   if (analysis.score <= 2) {
     candidate.push({
       title: 'Increase length and unpredictability',
       body: 'Length helps only when the extra characters are unpredictable. For a human-chosen value, a randomly generated passphrase of six or more words is easier to remember than a short, complex string.',
+      group: 'candidate',
+    });
+  } else if (analysis.score >= 3 && fastOfflineVulnerable && candidate.length === 0) {
+    candidate.push({
+      title: 'Add more length against fast offline attacks',
+      body: 'This candidate resists rate-limited logins, but a fast offline hash database (such as leaked MD5 or SHA-1 hashes) could crack it much sooner. Add more random characters or use a six-word passphrase.',
       group: 'candidate',
     });
   } else if (analysis.score >= 3 && candidate.length === 0) {
