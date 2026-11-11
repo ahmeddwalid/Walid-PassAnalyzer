@@ -81,3 +81,8 @@ Thumbs.db
 # Build outputs
 build/
 out/
+
+# Test artifacts
+test-results/
+playwright-report/
+blob-report/

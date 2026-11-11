@@ -1,24 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Walid PassAnalyzer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-<script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "react": "https://esm.sh/react@^19.1.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "zxcvbn": "https://esm.sh/zxcvbn@^4.4.2"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
-</head>
-<body class="bg-gray-950 text-gray-100">
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="A local-first password strength analyzer. Measure guessability, inspect patterns, generate audited randomness, and check breach exposure without sending a password."
+    />
+    <meta name="theme-color" content="#F5F2E9" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta property="og:title" content="Walid PassAnalyzer" />
+    <meta
+      property="og:description"
+      content="Local-first password analysis, pattern explanation, audited random generation, and optional k-anonymous breach checks."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ahmeddwalid.github.io/Walid-PassAnalyzer/" />
+    <title>Walid PassAnalyzer · Local password analysis</title>
+    <link rel="icon" href="%BASE_URL%favicon.svg" type="image/svg+xml" />
+    <link
+      rel="preload"
+      href="%BASE_URL%fonts/instrument-sans-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="%BASE_URL%fonts/newsreader-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <script>
+      __THEME_INIT__;
+    </script>
+  </head>
+  <body>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-</body>
+    <noscript>
+      <div class="noscript">
+        <h1>JavaScript is required</h1>
+        <p>
+          Walid PassAnalyzer performs every calculation inside your browser. Enable JavaScript to
+          use it.
+        </p>
+      </div>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

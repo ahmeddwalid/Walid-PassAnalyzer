@@ -1,42 +1,61 @@
 {
   "name": "walid-passanalyzer",
   "homepage": "https://ahmeddwalid.github.io/Walid-PassAnalyzer/",
-  "description": "A password strength analyzer built with React and Vite",
+  "description": "A local-first password strength instrument: analysis, audited generation, comparison, dictionaries, and optional k-anonymous breach checks.",
   "author": "Ahmed Walid",
   "license": "Apache-2.0",
   "private": true,
-  "version": "2.0.0",
+  "version": "3.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/verify-build.mjs",
     "preview": "vite preview",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
     "format": "prettier --write .",
-    "lint": "eslint . --ext .ts,.tsx",
+    "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
-    "test:coverage:report": "vitest run --coverage && open coverage/lcov-report/index.html",
-    "test:coverage:check": "vitest run --coverage && npx nyc report --reporter=text-lcov | npx coveralls"
+    "test:e2e": "playwright test",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
-    "jspdf": "^3.0.1",
+    "jspdf": "^4.2.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.0",
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.14.0",
-    "@vitest/ui": "^3.2.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/zxcvbn": "^4.4.5",
+    "@vitejs/plugin-react": "^4.7.0",
+    "@vitest/coverage-v8": "^5.1.0",
+    "@vitest/ui": "^5.1.0",
+    "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
     "gh-pages": "^6.1.1",
+    "globals": "^17.14.0",
     "jsdom": "^26.1.0",
+    "prettier": "^3.9.10",
+    "terser": "^5.43.1",
     "typescript": "~5.7.2",
-    "vite": "^6.2.0",
-    "vitest": "^3.2.4"
+    "typescript-eslint": "^8.72.2",
+    "vite": "^6.4.6",
+    "vitest": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

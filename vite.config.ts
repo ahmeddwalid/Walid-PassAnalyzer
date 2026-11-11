@@ -1,69 +1,82 @@
-import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
+import { createHash } from 'node:crypto';
+import { defineConfig, type Plugin } from 'vite';
+import react from '@vitejs/plugin-react';
 
-export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, '.', '');
-    return {
-      base: '/Walid-PassAnalyzer/',
-      resolve: {
-        alias: {
-          '@': path.resolve(__dirname, '.'),
-        }
-      },
-      build: {
-        // Enable code splitting
-        rollupOptions: {
-          output: {
-            manualChunks: {
-              // Separate vendor libraries
-              'vendor-crypto': ['zxcvbn'],
-              'vendor-pdf': ['jspdf'],
-              // Separate React and DOM
-              'react-vendor': ['react', 'react-dom'],
-              // Separate services
-              'services': [
-                './services/CryptoService.ts',
-                './services/DictionaryService.ts',
-                './services/PasswordAnalysisService.ts',
-                './services/ClipboardService.ts',
-                './services/ExportService.ts'
-              ],
-              // Separate components by feature
-              'generator-components': [
-                './components/PasswordGenerator.tsx',
-                './components/PassphraseGenerator.tsx'
-              ],
-              'comparison-components': [
-                './components/PasswordComparison.tsx',
-                './components/ComparisonInput.tsx',
-                './components/ComparisonResults.tsx'
-              ],
-              'dictionary-components': [
-                './components/DictionaryManager.tsx'
-              ]
-            }
-          }
-        },
-        // Optimize chunk size
-        chunkSizeWarningLimit: 1000,
-        // Enable minification
-        minify: 'terser',
-        terserOptions: {
-          compress: {
-            drop_console: mode === 'production',
-            drop_debugger: mode === 'production',
-            pure_funcs: mode === 'production' ? ['console.log', 'console.info'] : []
-          }
-        },
-        // Enable source maps for debugging
-        sourcemap: mode !== 'production'
-      },
-      // Optimize dependencies
-      optimizeDeps: {
-        include: ['react', 'react-dom', 'zxcvbn'],
-        exclude: ['jspdf'] // Load PDF library on demand
+/**
+ * A tiny synchronous theme initializer runs before paint. It has no network
+ * dependency and no access to candidate data. In production it is authorized
+ * by a SHA-256 hash in the CSP rather than a permissive 'unsafe-inline'.
+ */
+const THEME_INIT = `(() => {
+  try {
+    const stored = localStorage.getItem('pa.theme');
+    const theme = stored === 'dark' || stored === 'light' ? stored : 'light';
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  } catch {
+    document.documentElement.dataset.theme = 'light';
+  }
+})();`;
+
+function productionCsp(): Plugin {
+  return {
+    name: 'passanalyzer-production-csp',
+    enforce: 'post',
+    transformIndexHtml(html, context) {
+      let output = html.replace('__THEME_INIT__', THEME_INIT);
+      if (context.server) return output;
+
+      const inlineScript = /<script>([\s\S]*?)<\/script>/.exec(output)?.[1];
+      if (!inlineScript) {
+        throw new Error('The theme initializer was not found in the built HTML.');
       }
-      // If you have a 'plugins' array (e.g., for React or Vue), it would go here too.
-      // plugins: [react()], 
-    };
+      const themeHash = createHash('sha256').update(inlineScript).digest('base64');
+
+      const policy = [
+        "default-src 'self'",
+        "base-uri 'self'",
+        "object-src 'none'",
+        `script-src 'self' 'sha256-${themeHash}'`,
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data:",
+        "font-src 'self'",
+        "connect-src 'self' https://api.pwnedpasswords.com",
+        "worker-src 'self'",
+        "form-action 'none'",
+        "frame-src 'none'",
+      ].join('; ');
+
+      output = output.replace(
+        '</title>',
+        `</title>\n    <meta http-equiv="Content-Security-Policy" content="${policy}" />`,
+      );
+      return output;
+    },
+  };
+}
+
+export default defineConfig({
+  base: process.env.VITE_BASE_PATH || '/Walid-PassAnalyzer/',
+  plugins: [react(), productionCsp()],
+  build: {
+    target: 'es2020',
+    minify: 'terser',
+    sourcemap: false,
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+        },
+      },
+    },
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
+  },
 });
